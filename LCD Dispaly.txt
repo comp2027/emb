@@ -1,0 +1,12 @@
+#include "LCD.h"
+
+int main()
+{
+        LCD_init();                    // initialize LCD
+
+        LCD_display(1,2,"MicroEmbedded");   // display on 1st line 2nd position
+
+        LCD_display(2,1,"LPC2148");    // display on 2nd line 1st position
+
+        while(1);                      // stop here
+}

@@ -1,0 +1,242 @@
+#include <lpc214x.h>
+#include <stdio.h>
+
+/---------------- LCD DEFINITIONS ----------------/
+
+#define LCD_PORT 0x00FF0000
+
+#define EN  (1<<10)
+#define RS  (1<<11)
+#define RW  (1<<20)
+
+#define LCD_SHIFT 16
+
+/---------------- DELAY FUNCTION ----------------/
+
+void delay(unsigned int time)
+{
+int i,j;
+
+for(i=0;i<time;i++)  
+    for(j=0;j<200;j++);
+
+}
+
+/---------------- LCD FUNCTIONS ----------------/
+
+void LCD_strobe()
+{
+delay(100);
+
+IOSET0 = EN;  
+delay(100);  
+
+IOCLR0 = EN;  
+delay(100);
+
+}
+
+void LCD_data(unsigned char ch)
+{
+IOCLR1 = LCD_PORT;
+
+IOSET1 = ch << LCD_SHIFT;  
+
+IOSET0 = RS;  
+IOCLR0 = RW;  
+
+LCD_strobe();
+
+}
+
+void LCD_cmd(unsigned char ch)
+{
+IOCLR1 = LCD_PORT;
+
+IOSET1 = ch << LCD_SHIFT;  
+
+IOCLR0 = RS;  
+IOCLR0 = RW;  
+
+LCD_strobe();
+
+}
+
+void LCD_init()
+{
+PINSEL0 &= 0xFF0FFFFF;
+PINSEL1 &= 0xFFFFFFCF;
+PINSEL2 &= 0xFFFFFFF3;
+
+IODIR0 |= RS | EN | RW;  
+IODIR1 |= LCD_PORT;  
+
+LCD_cmd(0x38);   // 8-bit mode  
+LCD_cmd(0x06);   // Entry mode  
+LCD_cmd(0x0C);   // Display ON  
+LCD_cmd(0x01);   // Clear display  
+LCD_cmd(0x80);   // First line
+
+}
+
+void LCD_display(int row, int pos, unsigned char *msg)
+{
+unsigned char temp;
+
+if(row == 1)  
+    temp = 0x80 | (pos-1);  
+else  
+    temp = 0xC0 | (pos-1);  
+
+LCD_cmd(temp);  
+
+while(*msg)  
+{  
+    LCD_data(*msg++);  
+}
+
+}
+
+/---------------- UART FUNCTIONS ----------------/
+
+void uartInit(unsigned int baudrate)
+{
+int pclk, Fdiv;
+
+pclk = 15000000;  
+
+PINSEL0 |= 0x00050000;  
+
+U1LCR = 0x83;  
+
+Fdiv = (pclk/16)/baudrate;  
+
+U1DLM = Fdiv/256;  
+U1DLL = Fdiv%256;  
+
+U1LCR = 0x03;  
+
+U1TER = 0x80;
+
+}
+
+int UART_GetChar()
+{
+while(!(U1LSR & 0x01));
+
+return U1RBR;
+
+}
+
+/---------------- GPS FUNCTIONS ----------------/
+
+void GPS_string(unsigned char *temp)
+{
+unsigned int i = 0;
+
+do  
+{  
+    temp[i] = UART_GetChar();  
+
+}while(temp[i++] != '*');  
+
+temp[i] = '\0';
+
+}
+
+void GPS_display(unsigned char *lat, unsigned char *lon)
+{
+unsigned int i;
+
+LCD_cmd(0x84);  
+
+for(i=0;i<2;i++)  
+    LCD_data(*lat++);  
+
+LCD_data(':');  
+
+for(i=0;i<8;i++)  
+    LCD_data(*lat++);  
+
+LCD_cmd(0xC4);  
+
+for(i=0;i<3;i++)  
+    LCD_data(*lon++);  
+
+LCD_data(':');  
+
+for(i=0;i<8;i++)  
+    LCD_data(*lon++);
+
+}
+
+/---------------- MAIN PROGRAM ----------------/
+
+int main()
+{
+unsigned char ch;
+unsigned char temp[80];
+unsigned char lat[15];
+unsigned char lon[15];
+
+unsigned int i=0,j=0;  
+
+LCD_init();  
+
+uartInit(9600);  
+
+LCD_display(1,1,"GPS PROGRAM");  
+
+delay(200000);  
+
+LCD_cmd(0x01);  
+
+LCD_display(1,1,"LAT:");  
+LCD_display(2,1,"LON:");  
+
+while(1)  
+{  
+    if((ch = UART_GetChar()) == '$')  
+    {  
+        GPS_string(temp);  
+
+        if(temp[2]=='G' && temp[3]=='G' && temp[4]=='A')  
+        {  
+            i=0;  
+            j=0;  
+
+            while(temp[i++] != ',');  
+            while(temp[i++] != ',');  
+
+            while(temp[i] != ',')  
+            {  
+                lat[j++] = temp[i++];  
+            }  
+
+            while(temp[i++] != ',');  
+
+            lat[j++] = temp[i++];  
+
+            lat[j] = '\0';  
+
+            j=0;  
+
+            while(temp[i++] != ',');  
+
+            while(temp[i] != ',')  
+            {  
+                lon[j++] = temp[i++];  
+            }  
+
+            while(temp[i++] != ',');  
+
+            lon[j++] = temp[i++];  
+
+            lon[j] = '\0';  
+
+            GPS_display(lat,lon);  
+        }  
+    }  
+}
+
+}
