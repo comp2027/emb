@@ -1,0 +1,70 @@
+Processor Core
+Based on ARM7TDMI-S architecture.
+32-bit RISC processor.
+Supports both:
+ARM instruction set (32-bit)
+THUMB instruction set (16-bit compact code)
+Maximum clock frequency: 60 MHz.  
+elprocus.com +2
+2. Memory Features
+Flash memory: 32 KB to 512 KB.
+SRAM: 8 KB to 40 KB.
+128-bit memory interface gives faster execution speed.  
+elprocus.com +2
+3. GPIO (General Purpose Input Output)
+Around 45 fast GPIO pins.
+Pins are multiplexed, so one pin can perform multiple functions.
+5V tolerant pins available.  
+EmbeTronicX +2
+
+ADC and DAC
+Two 10-bit ADCs.
+Up to 14 analog input channels.
+One 10-bit DAC for analog output generation.
+ADC conversion time is very fast.  
+elprocus.com +1
+5. Communication Interfaces
+2 UARTs
+2 I2C interfaces
+SPI and SSP communication
+USB 2.0 full-speed support.  
+sundaramurthy.in +2
+6. Timers and PWM
+Two 32-bit timers/counters.
+PWM channels for:
+Motor control
+LED brightness control
+Servo interfacing
+Watchdog timer for system safety.  
+sundaramurthy.in +1
+7. RTC (Real Time Clock)
+Built-in RTC maintains:
+Time
+Date
+Calendar
+Uses external 32.768 kHz crystal.  
+sundaramurthy.in +1
+8. Interrupt System
+Vectored Interrupt Controller (VIC).
+Fast interrupt handling.
+External interrupt pins supported.  
+elprocus.com
+9. USB Support
+USB 2.0 full-speed device controller.
+Useful for:
+Data transfer
+PC communication
+Embedded USB applications.  
+elprocus.com +1
+10. Power Saving Modes
+Idle mode
+Power-down mode
+Used in battery-operated devices.  
+iies.in +1
+11. Applications of LPC2148
+Robotics
+GPS systems
+Industrial automation
+Medical equipment
+Smart parking systems
+Embedded control systems
